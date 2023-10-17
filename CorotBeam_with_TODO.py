@@ -30,8 +30,14 @@ def beam2local_def_disp(ex,ey, disp_global):
     """
     eVec12 = np.array([ex[1] - ex[0], ey[1] - ey[0]])
     L0 = math.sqrt(eVec12 @ eVec12)
+    eVec12 /= L0
 
-    Ld = L0 #TODO:  correct this
+    # Deformed position and unit vector along element
+    ex_def = ex + [disp_global[0], disp_global[3]]
+    ey_def = ey + [disp_global[1], disp_global[4]]
+    eVec12_def = np.array([ex_def[1] - ex_def[0], ey_def[1] - ey_def[0]])
+    Ld = math.sqrt(eVec12_def @ eVec12_def)
+    eVec12_def /= Ld
 
     # TODO: Quite a bit here
 
@@ -73,7 +79,15 @@ def beam2corot_Ke_and_Fe(ex,ey,ep, disp_global):
     # TODO: Quite a bit here
     Ke_global = np.zeros((6,6))
     fe_int_global = np.zeros(6)
+    disp_local = beam2local_def_disp(ex, ey, disp_global)
 
+    Kle = beam2local_stiff(L0,ep)
+    f_int_local = Kle @ disp_local
+
+    Te = beam2corot_Te(ex_def,ey_def)
+
+    Ke_global = Te.T @ Kle @ Te
+    fe_int_global = Te.T @ f_int_local
     return Ke_global, fe_int_global
 
     

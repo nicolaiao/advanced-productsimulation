@@ -30,19 +30,38 @@ def beam2local_def_disp(ex,ey, disp_global):
     """
     eVec12 = np.array([ex[1] - ex[0], ey[1] - ey[0]])
     L0 = math.sqrt(eVec12 @ eVec12)
-    eVec12 /= L0
+    #eVec12 /= L0
 
     # Deformed position and unit vector along element
     ex_def = ex + [disp_global[0], disp_global[3]]
     ey_def = ey + [disp_global[1], disp_global[4]]
     eVec12_def = np.array([ex_def[1] - ex_def[0], ey_def[1] - ey_def[0]])
     Ld = math.sqrt(eVec12_def @ eVec12_def)
-    eVec12_def /= Ld
+    #eVec12_def /= Ld
 
     # TODO: Quite a bit here
+    """
+    @author: jevalvik 
+    Using lecture notes (Corotational beam element: Deformational rotations) to solve the TODOs below
+    Steps in calculation:
+        1) Compute e_x0                                 Let e_x0 := evec12 / L0
+        2) Compute e_xn                                 Let e_xn := eVec12_def / Ld
+        3) Compute e_yn (90 degrees rotation at exn)    
+        4) Compute k(theta_i)                           
+        5) Compute t_i = k(theta_i) * e_x0              
+        6) Compute theta_di = a * sin(e_yn^T * t_i)     
+    """
+    e_x0 = eVec12 / L0
+    e_xn = eVec12_def /Ld
+    e_yn = np.array([-e_xn[1], e_xn[0]])
+    t1 = rot_matrix(disp_global[2]) * e_x0
+    t2 = rot_matrix(disp_global[5]) * e_x0
+    theta1 = math.asin(e_yn.T * t1)
+    theta2 = math.asin(e_yn.T * t2)
 
-    theta1_def = 0.0  # TODO: correct this
-    theta2_def = 0.0  # TODO: correct this
+    theta1_def = theta1  # TODO: correct this (DONE)
+    theta2_def = theta2  # TODO: correct this (DONE)
+    """@author: jevalvik END"""
 
     def_disp_local = np.array([ -0.5*(Ld - L0),
                                 0.0,

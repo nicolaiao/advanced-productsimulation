@@ -1,7 +1,7 @@
 import BeamModels_with_TODO as models
 import SolverAlgorithms_with_TODO as algs
 
-num_nodes = 9
+num_nodes = 10
 #model = models.SimplySupportedBeamModel(num_nodes)
 model = models.CantileverWithEndMoment(num_nodes)
 

@@ -61,25 +61,28 @@ class BeamModel:
     def get_num_dofs(self):
         num_dofs = self.num_nodes * 3
         return num_dofs
+    
 
     def get_internal_forces(self, disp_sys):
-        # Build system stiffness matrix for the structure
+        # Initialize the internal forces array with zeros
         f_int_sys = np.zeros(self.num_dofs)
 
         for iel in range(self.num_elements):
-            inod1 = self.Enods[iel,0]-1
-            inod2 = self.Enods[iel,1]-1
-            ex1 = self.coords[inod1,0]
-            ex2 = self.coords[inod2,0]
-            ex = np.array([ex1,ex2])
-            ey = np.array([self.coords[inod1,1],self.coords[inod2,1]])
-            Ke = CorotBeam.beam2e(ex, ey, self.ep)   #TODO something better here
+            print(iel)
+            inod1 = self.Enods[iel, 0] - 1
+            inod2 = self.Enods[iel, 1] - 1
+            ex1 = self.coords[inod1, 0]
+            ex2 = self.coords[inod2, 0]
+            ex = np.array([ex1, ex2])
+            ey = np.array([self.coords[inod1, 1], self.coords[inod2, 1]])
+            Ke = CorotBeam.beam2e(ex, ey, self.ep)
             Edofs = self.Edofs[iel] - 1
-            disp_e = disp_sys[np.ix_(Edofs)] # ix_ picks elements with indexes in Edofs
-            f_int_e = Ke * disp_e   #TODO something better here
+            disp_e = disp_sys[np.ix_(Edofs)]
+            f_int_e = Ke @ disp_e   #TODO something better here
             f_int_sys[np.ix_(Edofs)] += f_int_e
 
         return f_int_sys
+
 
     def get_incremental_load(self,loadFactor):
         return self.inc_load

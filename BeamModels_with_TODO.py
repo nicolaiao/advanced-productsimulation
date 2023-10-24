@@ -11,6 +11,7 @@ import CorotBeam_with_TODO as CorotBeam
 import matplotlib.animation as anm
 from copy import deepcopy
 import meshio
+import matplotlib.animation as animation
 
 # ----- Topology -------------------------------------------------
 
@@ -68,7 +69,6 @@ class BeamModel:
         f_int_sys = np.zeros(self.num_dofs)
 
         for iel in range(self.num_elements):
-            print(iel)
             inod1 = self.Enods[iel, 0] - 1
             inod2 = self.Enods[iel, 1] - 1
             ex1 = self.coords[inod1, 0]
@@ -99,17 +99,19 @@ class BeamModel:
         self.load_history.append(loadFactor)
         self.disp_history.append(disp_sys)
 
-    def plotDispState(self, step, limits=None, scaleFactor=1 ):
+    def plotDispState(self, step, limits=None, scaleFactor=1, fig=None, ax=None, ax_shape=None, show=False):
         # DOF: DOF number of displacement to be plotted
         # Scale: scale factor for displacement
-        plt.close('all')  # Close all currently open figures
+        #plt.close('all')  # Close all currently open figures
         # Getting deformations from all nodes:
         # deformations = self.disp_history[:,DOF]
         num_steps = len(self.load_history)
         num_nodes = self.num_nodes
 
         # Starting subplot:
-        fig, (ax, ax_shape) = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
+        if (fig and ax and ax_shape) is None:
+            fig, (ax, ax_shape) = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
+            show=True
 
         # Setting up force-displacement curve:
         plottedDeformations = np.zeros(num_steps)
@@ -141,10 +143,10 @@ class BeamModel:
             ax_shape.set_xlim(limits[0], limits[1])
             ax_shape.set_ylim(limits[2], limits[3])
 
-        ax.plot(plottedDeformations,self.load_history)
+        container = ax.plot(plottedDeformations,self.load_history)
         ax_shape.plot(x,y)
-
-        plt.show(block=True)
+        if show:
+            plt.show(block=True)
 
 
     def vtu_print_state(self, step, limits=None, scaleFactor=1 ):
@@ -168,6 +170,8 @@ class BeamModel:
         #mesh = meshio.Mesh(points, cells)
         fileName = 'Results/State_{}.vtu'.format(str(step).zfill(4))
         mesh.write(fileName)
+
+
 # This is an actual model
 class SimplySupportedBeamModel(BeamModel):
 

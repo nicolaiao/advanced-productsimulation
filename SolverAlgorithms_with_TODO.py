@@ -23,12 +23,10 @@ def solveArchLength(model, archLength=0.02, max_steps=50, max_iter=30):
     d_q_prev = np.zeros(num_dofs)
 
     for iStep in range(max_steps):
-
-        #TODO: Implement this (Predictor step ?)
+        #Predictor step
         q_Vec = model.get_incremental_load(Lambda) 
         K_mat = model.get_K_sys(uVec)
         w_q0 = np.linalg.solve(K_mat, q_Vec)
-        #q = np.dot(model.get_K_sys(uVec), w_q0) # not correct uvec
         f = np.sqrt(1 + np.dot(np.transpose(w_q0), w_q0))
         if np.dot(np.transpose(w_q0), uVec) > 0:
             d_lambda = archLength/f
@@ -37,25 +35,17 @@ def solveArchLength(model, archLength=0.02, max_steps=50, max_iter=30):
         
         uVec += d_lambda * w_q0 
         Lambda += d_lambda
-        
 
         for iIter in range(max_iter):
-
-            # TODO: Implement this (Corrector step ?)
-            #K(vˆ)wq = q
-            #K(vˆ)wr = −r(vˆ, λ)
-            #del_λ =  -(w_q0.T * w_r)/(1 + w_q0.T*w_q)
-            print("iIter: ", iIter)
-            res_Vec = model.get_residual(Lambda, uVec) # <-- Has to be this
+            # Corrector step
+            K_mat = model.get_K_sys(uVec)
+            q_Vec = model.get_incremental_load(Lambda)
+            w_q = np.linalg.solve(K_mat, q_Vec)
+            res_Vec = model.get_residual(Lambda, uVec) 
             w_r = model.get_external_load(Lambda)
-            tmp = np.dot(np.transpose(w_q0), w_r)
+            tmp = np.dot(np.transpose(w_q), w_r)
             d_lambda = - tmp / (1 + tmp)
             Lambda += d_lambda
-            #node_disp #v_hat
-            #res_Vec = model.get_residual(uVec, Lambda) #get_residual(load_factor, disp_sys)
-            if (res_Vec.dot(res_Vec) < 1.0e-15): # until ||r(v, lambda)|| < epsilon
-                break
-            res_Vec = model.get_residual(Lambda, uVec) #Lambda has to be iterable
             if (res_Vec.dot(res_Vec) < 1.0e-15):
                 break
 

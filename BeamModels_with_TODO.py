@@ -46,8 +46,10 @@ class BeamModel:
             ex2 = self.coords[inod2,0]
             ex = np.array([ex1,ex2])
             ey = np.array([self.coords[inod1,1],self.coords[inod2,1]])
-            Ke = CorotBeam.beam2e(ex, ey, self.ep) #TODO use updated routine here
             Edofs = self.Edofs[iel] - 1
+            disp_e = disp_sys[np.ix_(Edofs)]
+            Ke = CorotBeam.beam2corot_Ke_and_Fe(ex,ey,self.ep, disp_e)[0]
+
             K_sys[np.ix_(Edofs,Edofs)] += Ke
 
         # Set boundary conditions
@@ -75,10 +77,9 @@ class BeamModel:
             ex2 = self.coords[inod2, 0]
             ex = np.array([ex1, ex2])
             ey = np.array([self.coords[inod1, 1], self.coords[inod2, 1]])
-            Ke = CorotBeam.beam2e(ex, ey, self.ep)
             Edofs = self.Edofs[iel] - 1
             disp_e = disp_sys[np.ix_(Edofs)]
-            f_int_e = Ke @ disp_e   #TODO something better here
+            f_int_e = CorotBeam.beam2corot_Ke_and_Fe(ex,ey,self.ep, disp_e)[1]
             f_int_sys[np.ix_(Edofs)] += f_int_e
 
         return f_int_sys
@@ -92,12 +93,18 @@ class BeamModel:
 
     def get_residual(self,loadFactor,disp_sys):
         f_int = self.get_internal_forces(disp_sys)
-        f_res = self.get_external_load(loadFactor) + self.get_internal_forces(disp_sys)
+        f_res = self.get_external_load(loadFactor) - self.get_internal_forces(disp_sys)
+
+        # Set boundary conditions
+        for idof in range(len(self.bc)):
+            idx = self.bc[idof] - 1
+            f_res[idx]   = 0.0
+  
         return f_res
 
     def append_solution(self, loadFactor, disp_sys):
         self.load_history.append(loadFactor)
-        self.disp_history.append(disp_sys)
+        self.disp_history.append(deepcopy(disp_sys))
 
     def plotDispState(self, step, limits=None, scaleFactor=1, fig=None, ax=None, ax_shape=None, show=False):
         # DOF: DOF number of displacement to be plotted

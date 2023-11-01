@@ -54,10 +54,10 @@ def beam2local_def_disp(ex,ey, disp_global):
     e_x0 = eVec12 / L0
     e_xn = eVec12_def /Ld
     e_yn = np.array([-e_xn[1], e_xn[0]])
-    t1 = rot_matrix(disp_global[2]) * e_x0
-    t2 = rot_matrix(disp_global[5]) * e_x0
-    theta1 = math.asin(e_yn.T * t1)
-    theta2 = math.asin(e_yn.T * t2)
+    t1 = rot_matrix(disp_global[2]) @ e_x0
+    t2 = rot_matrix(disp_global[5]) @ e_x0
+    theta1 = math.asin(e_yn.T @ t1)
+    theta2 = math.asin(e_yn.T @ t2)
 
     theta1_def = theta1  # TODO: correct this (DONE)
     theta2_def = theta2  # TODO: correct this (DONE)

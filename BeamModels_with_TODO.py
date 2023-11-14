@@ -178,6 +178,66 @@ class BeamModel:
         fileName = 'Results/State_{}.vtu'.format(str(step).zfill(4))
         mesh.write(fileName)
 
+class DeepArchModel(BeamModel):
+    def __init__(self, num_nodes):
+        #Using mm
+        BeamModel.__init__(self)
+        self.num_nodes = num_nodes
+        self.num_elements = num_nodes - 1
+        self.num_dofs = self.num_nodes * 3
+        self.E = 2.1e5
+        # Assuming circular cross-section
+        d = 400
+        self.I = (np.pi * d**4)/64
+        self.A = np.pi* (d/2)**2
+        self.ep = np.array([self.E, self.A, self.I])
+        self.L_total = 1600
+        L_el = self.L_total / self.num_elements
+
+        self.coords = np.zeros((self.num_nodes,2))
+        self.dispState = np.zeros(self.num_nodes*3)
+        self.Ndofs  = np.zeros((self.num_nodes,3)) # Dofs for all the nodes
+
+        self.Edofs = np.zeros((self.num_elements,6),dtype=int) # Element dofs for all the elements
+        self.Enods = np.zeros((self.num_elements,2),dtype=int) # Element nodes for all the elements
+        for i in range(self.num_elements):
+            self.Edofs[i,:] = np.array([1,2,3,4,5,6],dtype=int) + 3*i
+            self.Enods[i,:] = np.array([1,2],dtype=int) + i
+
+        # Fix x and y at first and last node
+        ln = (self.num_nodes*3)
+        self.bc = np.array([1,2,ln-2,ln-1],dtype=int)
+
+        # The external incremental load (linear scaling with lambda)
+        mid_node      = (self.num_nodes +1) // 2
+        mid_y_dof_idx = (mid_node-1) * 3 + 1
+        self.inc_load = np.zeros(self.num_dofs)
+        self.inc_load[mid_y_dof_idx] = 500.0e+4
+        self.plotDof = mid_y_dof_idx + 1
+
+        # Add rotations to get arch
+        # coords = [[x1, y1],
+        #           [x2, y2],
+        #               : 
+        #           [xn, yn]]
+        H = 400 # mm
+        R = 1000 # mm
+        theta = -2 * np.arcsin(self.L_total/(2*R))
+        middle = self.L_total / 2
+        for row in range(self.num_nodes):
+            self.coords[row, 0] = row*L_el
+            if row == 0 or row == num_nodes - 1:
+                self.coords[row, 1] = 0
+            elif row*L_el < middle:
+                self.coords[row, 1] = self.coords[row-1, 1] + L_el*np.sin(1-theta)
+            elif (row-1)*L_el < middle and row*L_el > middle:
+                self.coords[row, 1] = self.coords[row-1, 1]
+            else:
+                self.coords[row, 1] = self.coords[row-1, 1] - L_el*np.sin(1-theta)
+            self.Ndofs[row,:] = np.array([1,2,3],dtype=int) + row*3
+        
+        plt.scatter(self.coords[:,0], self.coords[:,1])
+        plt.show(block=True)
 
 # This is an actual model
 class SimplySupportedBeamModel(BeamModel):
@@ -212,7 +272,6 @@ class SimplySupportedBeamModel(BeamModel):
 
         # Fix x and y at first node and y at last node
         self.bc = np.array([1,2,(self.num_nodes*3 -1)],dtype=int)
-
         # The external incremental load (linear scaling with lambda)
         mid_node      = (self.num_nodes +1) // 2
         mid_y_dof_idx = (mid_node-1) * 3 + 1

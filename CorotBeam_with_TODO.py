@@ -108,9 +108,29 @@ def beam2corot_Ke_and_Fe(ex,ey,ep, disp_global):
     Te = beam2corot_Te(ex_def,ey_def)
 
     # TODO: make K_geo matrix
-    # ...
-    #Kle += Kl_geo
+    
+    V = f_int_local[4]
+    N = f_int_local[3]
+    L = Ld
 
+    # Create a 6x6 matrix with all zeros
+    Kl_geo = np.zeros((6, 6))
+
+    # Change specific elements as needed
+    Kl_geo[0, 1] = -V / (2 * L)
+    Kl_geo[0, 4] = V / (2 * L)
+    Kl_geo[1, 0] = -V / (2 * L)
+    Kl_geo[1, 1] = N / L
+    Kl_geo[1, 3] = V / (2 * L)
+    Kl_geo[1, 4] = -N / L
+    Kl_geo[3, 1] = V / (2 * L)
+    Kl_geo[3, 4] = -V / (2 * L)
+    Kl_geo[4, 0] = V / (2 * L)
+    Kl_geo[4, 1] = -N / L
+    Kl_geo[4, 3] = -V / (2 * L)
+    Kl_geo[4, 4] = N / L
+    
+    Kle += Kl_geo
     Ke_global = Te.T @ Kle @ Te
     fe_int_global = Te.T @ f_int_local
     return Ke_global, fe_int_global

@@ -94,6 +94,8 @@ def beam2corot_Ke_and_Fe(ex,ey,ep, disp_global):
     # Deformed position and unit vector along element
     ex_def = ex + [disp_global[0], disp_global[3]]
     ey_def = ey + [disp_global[1], disp_global[4]]
+    eVec12_def = np.array([ex_def[1] - ex_def[0], ey_def[1] - ey_def[0]])
+    Ld = math.sqrt(eVec12_def @ eVec12_def)
 
     # TODO: Quite a bit here
     Ke_global = np.zeros((6,6))
@@ -104,6 +106,10 @@ def beam2corot_Ke_and_Fe(ex,ey,ep, disp_global):
     f_int_local = Kle @ disp_local
 
     Te = beam2corot_Te(ex_def,ey_def)
+
+    # TODO: make K_geo matrix
+    # ...
+    #Kle += Kl_geo
 
     Ke_global = Te.T @ Kle @ Te
     fe_int_global = Te.T @ f_int_local

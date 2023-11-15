@@ -17,7 +17,7 @@ def animate_model(model, step_inc):
 
     plt.show()
 
-num_nodes = 10
+num_nodes = 21 # NEED TO BE ODD NUMBERS OF NODES (To get the force in the midle of the beam)
 #model = models.SimplySupportedBeamModel(num_nodes)
 #model = models.CantileverWithEndMoment(num_nodes)
 
@@ -29,7 +29,8 @@ models = [#models.SimplySupportedBeamModel(num_nodes),
           models.DeepArchModel(num_nodes)
         ]
 for model in models:
-    algs.solveArchLength(model,archLength=0.01,max_steps=100)
+    #algs.solveLinearSteps(model,load_steps=0.01,max_steps=100)
+    algs.solveArchLength(model,archLength=1.0,max_steps=20)
 
     num_steps = len(model.load_history)
 

@@ -28,11 +28,13 @@ def solveArchLength(model, archLength=0.02, max_steps=50, max_iter=30):
         K_mat = model.get_K_sys(uVec)
         w_q0 = np.linalg.solve(K_mat, q_Vec)
         f = np.sqrt(1 + np.dot(np.transpose(w_q0), w_q0))
-        if np.dot(np.transpose(w_q0), uVec) > 0:
-            d_lambda = archLength/f
-        else:
-            d_lambda = -archLength/f
+
+        d_lambda = archLength/f
+        if np.dot(np.transpose(w_q0), d_q_prev) < 0:
+            d_lambda = -d_lambda
+
         
+        d_q_prev = d_lambda * w_q0
         uVec += d_lambda * w_q0 
         Lambda += d_lambda
 
@@ -42,11 +44,12 @@ def solveArchLength(model, archLength=0.02, max_steps=50, max_iter=30):
             q_Vec = model.get_incremental_load(Lambda)
             w_q = np.linalg.solve(K_mat, q_Vec)
             #res_Vec = model.get_residual(Lambda, uVec)
-            w_r = model.get_external_load(Lambda)
+            res_Vec = model.get_residual(Lambda, uVec)
 
-            res_Vec = np.linalg.solve(K_mat,w_r)
+            w_r = np.linalg.solve(K_mat, res_Vec)
 
             tmp = np.dot(np.transpose(w_q), w_r)
+            
             d_lambda = - tmp / (1 + tmp)
             Lambda += d_lambda
             uVec += (w_r + d_lambda*w_q)

@@ -38,6 +38,11 @@ def solveArchLength(model, archLength=0.02, max_steps=50, max_iter=30):
         uVec += d_lambda * w_q0 
         Lambda += d_lambda
 
+        #print("Predictor Lambda= {:12.3e} d_lambda= {:12.3e}".format(Lambda, d_lambda))
+
+
+        converged = False
+
         for iIter in range(max_iter):
             # Corrector step
             K_mat = model.get_K_sys(uVec)
@@ -46,6 +51,14 @@ def solveArchLength(model, archLength=0.02, max_steps=50, max_iter=30):
             #res_Vec = model.get_residual(Lambda, uVec)
             res_Vec = model.get_residual(Lambda, uVec)
 
+            resNorm = res_Vec.dot(res_Vec)
+
+            #print("      step {:} iter {:} Lambda= {:12.3e} resNorm= {:12.3e}".format(iStep, iIter, Lambda, resNorm))
+
+            if ( resNorm < 1.0e-10):
+                converged = True
+                break
+
             w_r = np.linalg.solve(K_mat, res_Vec)
 
             tmp = np.dot(np.transpose(w_q), w_r)
@@ -53,11 +66,14 @@ def solveArchLength(model, archLength=0.02, max_steps=50, max_iter=30):
             d_lambda = - tmp / (1 + tmp)
             Lambda += d_lambda
             uVec += (w_r + d_lambda*w_q)
-            if (np.abs(res_Vec.dot(res_Vec)) < 1.0e-15):
-                break
+            #print("      step {:} iter {:} Lambda= {:12.3e} d_lambda= {:12.3e} resNorm= {:12.3e}".format(iStep, iIter, Lambda, d_lambda,resNorm))
+
+        if not converged:
+            print("!! Iterations did not converge !!")
+            break
 
         model.append_solution(Lambda, uVec)
-        print("Linear arc step {:}  load_factor= {:12.3e}".format(iStep, Lambda))
+        #print("Linear arc step {:}  load_factor= {:12.3e}".format(iStep, Lambda))
 
 def solveNonlinLoadControl(model, load_steps=0.01, max_steps=100, max_iter=30):
     num_dofs = model.get_num_dofs()

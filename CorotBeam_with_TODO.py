@@ -129,8 +129,15 @@ def beam2corot_Ke_and_Fe(ex,ey,ep, disp_global):
     Kl_geo[4, 1] = -N / L
     Kl_geo[4, 3] = -V / (2 * L)
     Kl_geo[4, 4] = N / L
+
+    G = np.array([[0, -1/L, 0, 0, 1/L, 0]])
+    f_tilde = np.array([[-f_int_local[1],f_int_local[0],0,-f_int_local[4],f_int_local[3],0]]).T
+
+    Kl_geo2 = (f_tilde @ G + G.T @ f_tilde.T) / 2.0
+
+    diff = Kl_geo - Kl_geo2
     
-    Kle += Kl_geo
+    Kle += Kl_geo2
     Ke_global = Te.T @ Kle @ Te
     fe_int_global = Te.T @ f_int_local
     return Ke_global, fe_int_global

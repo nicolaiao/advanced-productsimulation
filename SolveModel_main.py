@@ -30,14 +30,14 @@ models = [#models.SimplySupportedBeamModel(num_nodes),
         ]
 for model in models:
     #algs.solveLinearSteps(model,load_steps=0.01,max_steps=100)
-    algs.solveArchLength(model,archLength=1.0,max_steps=20)
+    algs.solveArchLength(model,archLength=2.0,max_steps=200)
 
     num_steps = len(model.load_history)
 
     for iStep in range(num_steps):
         print("LoadFactor= {:12.3e}".format(model.load_history[iStep]))
-        print("dispVec={:}".format(iStep))
-        print(model.disp_history[iStep])
+        #print("dispVec={:}".format(iStep))
+        #print(model.disp_history[iStep])
 
     # Create matplotlib plots
     step_inc = (num_steps // 10)

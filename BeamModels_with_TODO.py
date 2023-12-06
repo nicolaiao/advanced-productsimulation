@@ -129,7 +129,7 @@ class BeamModel:
 
         ax.plot(plottedDeformations, self.load_history, label="Node")
         ax.plot([plottedDeformations[step]], [self.load_history[step]], '.', color='red')
-        ax.legend(loc='best', fontsize=12)
+        #ax.legend(loc='best', fontsize=12)
         ax.set_xlabel('Displacement', fontsize=12)
         ax.set_ylabel('Applied force', fontsize=12)
         ax.set_title('Force-displacement')
@@ -186,7 +186,8 @@ class DeepArchModel(BeamModel):
         self.num_elements = num_nodes - 1
         self.num_dofs = self.num_nodes * 3
         self.E = 2.1e5
-        # Assuming circular cross-section
+        
+        # Assuming rectangular cross-section
         h = 10.0
         b = 1.0
         self.I = b * h**3 / 12.0
@@ -209,7 +210,8 @@ class DeepArchModel(BeamModel):
         
         H = 400 # mm
         R = 1000 # mm
-
+        L_total = 1600 # mm
+        d = R - H
         # The external incremental load (linear scaling with lambda)
         mid_node      = (self.num_nodes +1) // 2
         mid_y_dof_idx = (mid_node-1) * 3 + 1
@@ -224,17 +226,14 @@ class DeepArchModel(BeamModel):
         #           [xn, yn]]
 
         
-        theta0 = math.atan2(800,600)
-        dTheta = 2*theta0 / self.num_elements
+        theta0 = math.atan2(L_total/2,d)
+        dTheta = 2*theta0 / (num_nodes - 1)
 
         for row in range(self.num_nodes):
             theta = -theta0 + row * dTheta
             self.coords[row, 0] = R * math.sin(theta)
-            self.coords[row, 1] = R * math.cos(theta) - 600.0
+            self.coords[row, 1] = R * math.cos(theta) - d
             self.Ndofs[row,:] = np.array([1,2,3],dtype=int) + row*3
-        
-        plt.scatter(self.coords[:,0], self.coords[:,1])
-        plt.show(block=True)
 
 # This is an actual model
 class SimplySupportedBeamModel(BeamModel):
